@@ -12,6 +12,26 @@ export async function fetchPhases(societyId) {
   const res = await fetch(`${API_URL}/locations/phases?society_id=${societyId}`);
   return res.json();
 }
+export async function fetchSocietyBySlug(citySlug, societySlug) {
+  const res = await fetch(`${API_URL}/locations/by-slug/${citySlug}/${societySlug}`);
+  return res.json();
+}
+export async function submitRequirement(data) {
+  const res = await fetch(`${API_URL}/requirements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+export async function reportProperty(code, data) {
+  const res = await fetch(`${API_URL}/properties/${code}/report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
 export async function fetchProperties(filters = {}) {
   const params = new URLSearchParams(filters);
   const res = await fetch(`${API_URL}/properties?${params}`);
@@ -78,5 +98,13 @@ export async function adminApproveProperty(id) {
     method: 'PATCH',
     headers: adminHeaders()
   });
+  return res.json();
+}
+export async function adminFetchRequirements() {
+  const res = await fetch(`${API_URL}/admin/requirements`, { headers: adminHeaders() });
+  return res.json();
+}
+export async function adminFetchReports() {
+  const res = await fetch(`${API_URL}/admin/reports`, { headers: adminHeaders() });
   return res.json();
 }

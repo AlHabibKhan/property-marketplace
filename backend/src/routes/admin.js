@@ -55,4 +55,34 @@ router.get('/contacts', async (req, res) => {
   res.json(result.rows);
 });
 
+// Buyer requirements (reverse listings) — matched manually against active listings
+router.get('/requirements', async (req, res) => {
+  const result = await pool.query(`
+    SELECT r.id, r.budget_max, r.property_type, r.notes, r.status, r.created_at,
+           b.name AS buyer_name, b.phone AS buyer_phone,
+           c.name AS city_name, s.name AS society_name,
+           (SELECT COUNT(*) FROM properties p WHERE p.status = 'active' AND p.society_id = r.society_id) AS matching_properties
+    FROM buyer_requirements r
+    LEFT JOIN buyers b ON r.buyer_id = b.id
+    LEFT JOIN cities c ON r.city_id = c.id
+    LEFT JOIN societies s ON r.society_id = s.id
+    ORDER BY r.created_at DESC
+  `);
+  res.json(result.rows);
+});
+
+// Flagged listings + report counts
+router.get('/reports', async (req, res) => {
+  const result = await pool.query(`
+    SELECT p.id, p.property_code, p.title, p.status, p.is_verified,
+           s.name AS seller_name, s.phone AS seller_phone,
+           (SELECT COUNT(*) FROM listing_reports lr WHERE lr.property_id = p.id) AS report_count
+    FROM properties p
+    JOIN sellers s ON p.seller_id = s.id
+    WHERE p.status = 'flagged'
+    ORDER BY p.created_at DESC
+  `);
+  res.json(result.rows);
+});
+
 export default router;

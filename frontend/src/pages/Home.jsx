@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import LocationSelector from '../components/LocationSelector';
 import PropertyCard from '../components/PropertyCard';
 import { fetchProperties } from '../api/client';
@@ -73,6 +74,22 @@ export default function Home() {
             {properties.map(p => <PropertyCard key={p.id} property={p} />)}
           </div>
         )}
+      </section>
+
+      <section className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+        <h2 className="font-semibold text-amber-900">Important Notice</h2>
+        <p className="text-sm text-amber-800 leading-relaxed mt-2">
+          Property Marketplace is a listing and lead-connection platform only. We are not a real estate agent,
+          broker, or legal adviser. All listings are user-submitted and may not be independently verified — a
+          "Verified" badge reflects an administrative review only. Before buying or selling, always verify ownership
+          documents, NOC and society approvals, and transfer processes with qualified professionals.
+        </p>
+        <Link
+          to="/disclaimer"
+          className="inline-block mt-3 text-sm font-medium text-amber-900 underline hover:text-amber-700"
+        >
+          Read full disclaimer
+        </Link>
       </section>
     </div>
   );

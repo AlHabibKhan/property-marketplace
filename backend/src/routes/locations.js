@@ -25,4 +25,19 @@ router.get('/phases', async (req, res) => {
   res.json(result.rows);
 });
 
+// PUBLIC: SEO landing — resolve city + society by slug
+router.get('/by-slug/:citySlug/:societySlug', async (req, res) => {
+  const { citySlug, societySlug } = req.params;
+  const result = await pool.query(
+    `SELECT c.id AS city_id, c.name AS city_name, c.slug AS city_slug,
+            s.id AS society_id, s.name AS society_name, s.slug AS society_slug, s.has_phases
+     FROM societies s
+     JOIN cities c ON s.city_id = c.id
+     WHERE c.slug = $1 AND s.slug = $2`,
+    [citySlug, societySlug]
+  );
+  if (result.rows.length === 0) return res.status(404).json({ error: 'Location not found' });
+  res.json(result.rows[0]);
+});
+
 export default router;

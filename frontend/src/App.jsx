@@ -2,8 +2,13 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Home from './pages/Home';
 import PropertyDetail from './pages/PropertyDetail';
 import ListProperty from './pages/ListProperty';
+import Requirements from './pages/Requirements';
+import SocietyLanding from './pages/SocietyLanding';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import LegalPage from './pages/LegalPage';
+import { legalContent } from './pages/legal-content';
+import Footer from './components/Footer';
 
 export default function App() {
   return (
@@ -15,6 +20,7 @@ export default function App() {
             <div className="flex items-center gap-4 text-sm font-medium">
               <Link to="/" className="text-gray-700 hover:text-emerald-700">Browse</Link>
               <Link to="/list" className="text-gray-700 hover:text-emerald-700">List Property</Link>
+              <Link to="/requirements" className="text-gray-700 hover:text-emerald-700">Post Requirement</Link>
               <Link to="/admin" className="text-gray-700 hover:text-emerald-700">Admin</Link>
             </div>
           </div>
@@ -25,10 +31,17 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/property/:slug" element={<PropertyDetail />} />
             <Route path="/list" element={<ListProperty />} />
+            <Route path="/requirements" element={<Requirements />} />
+            <Route path="/:citySlug/:societySlug" element={<SocietyLanding />} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/terms" element={<LegalPage {...legalContent.terms} />} />
+            <Route path="/privacy" element={<LegalPage {...legalContent.privacy} />} />
+            <Route path="/disclaimer" element={<LegalPage {...legalContent.disclaimer} />} />
           </Routes>
         </main>
+
+        <Footer />
       </div>
     </BrowserRouter>
   );

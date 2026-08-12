@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchProperty } from '../api/client';
+import { fetchProperty, reportProperty } from '../api/client';
 import OfferForm from '../components/OfferForm';
 
 export default function PropertyDetail() {
   const { slug } = useParams();
   const [property, setProperty] = useState(null);
   const [error, setError] = useState('');
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportStatus, setReportStatus] = useState('');
 
   useEffect(() => {
     fetchProperty(slug)
@@ -16,6 +19,17 @@ export default function PropertyDetail() {
       })
       .catch(() => setError('Failed to load property'));
   }, [slug]);
+
+  const handleReport = async () => {
+    const res = await reportProperty(property.property_code, { reason: reportReason });
+    if (res.success) {
+      setReportStatus(`Report submitted. Thank you for helping keep listings trustworthy.`);
+      setReportOpen(false);
+      setReportReason('');
+    } else {
+      setReportStatus(res.error || 'Failed to submit report.');
+    }
+  };
 
   if (error) {
     return <p className="text-center text-red-600 py-10">{error}</p>;
@@ -95,6 +109,45 @@ export default function PropertyDetail() {
           Submit your offer or enquiry. Our team will review it and connect you with the seller.
         </p>
         <OfferForm propertyCode={property.property_code} />
+      </div>
+
+      <div className="mt-6 text-right">
+        {!reportOpen ? (
+          <button
+            onClick={() => setReportOpen(true)}
+            className="text-sm text-red-600 hover:text-red-700 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors"
+          >
+            Report this listing
+          </button>
+        ) : (
+          <div className="text-left bg-red-50 border border-red-200 rounded-lg p-4">
+            <label className="block text-sm font-medium text-red-800 mb-2">
+              Report this listing
+            </label>
+            <textarea
+              value={reportReason}
+              onChange={e => setReportReason(e.target.value)}
+              rows="2"
+              placeholder="Why are you reporting this property?"
+              className="w-full px-3 py-2 border border-red-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-400"
+            />
+            <div className="mt-3 flex gap-3 justify-end">
+              <button
+                onClick={() => setReportOpen(false)}
+                className="text-sm text-gray-600 px-3 py-1.5 rounded-lg hover:bg-red-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReport}
+                className="text-sm bg-red-600 hover:bg-red-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Submit report
+              </button>
+            </div>
+          </div>
+        )}
+        {reportStatus && <p className="text-sm text-gray-600 mt-2 text-right">{reportStatus}</p>}
       </div>
     </div>
   );

@@ -4,6 +4,8 @@ import {
   adminFetchOffers,
   adminFetchPendingListings,
   adminFetchContacts,
+  adminFetchRequirements,
+  adminFetchReports,
   adminUpdateOfferStatus,
   adminApproveProperty
 } from '../api/client';
@@ -11,6 +13,8 @@ import {
 const TABS = [
   { key: 'offers', label: 'New Offers' },
   { key: 'pending', label: 'Pending Listings' },
+  { key: 'requirements', label: 'Buyer Requirements' },
+  { key: 'flagged', label: 'Flagged' },
   { key: 'contacts', label: 'All Contacts' }
 ];
 
@@ -34,6 +38,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('offers');
   const [offers, setOffers] = useState([]);
   const [pending, setPending] = useState([]);
+  const [requirements, setRequirements] = useState([]);
+  const [flagged, setFlagged] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -41,15 +47,19 @@ export default function AdminDashboard() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [offersData, pendingData, contactsData] = await Promise.all([
+      const [offersData, pendingData, requirementsData, flaggedData, contactsData] = await Promise.all([
         adminFetchOffers(),
         adminFetchPendingListings(),
+        adminFetchRequirements(),
+        adminFetchReports(),
         adminFetchContacts()
       ]);
 
       const anyUnauthorized =
         offersData.error === 'Unauthorized' ||
         pendingData.error === 'Unauthorized' ||
+        requirementsData.error === 'Unauthorized' ||
+        flaggedData.error === 'Unauthorized' ||
         contactsData.error === 'Unauthorized';
 
       if (anyUnauthorized) {
@@ -60,6 +70,8 @@ export default function AdminDashboard() {
 
       setOffers(Array.isArray(offersData) ? offersData : []);
       setPending(Array.isArray(pendingData) ? pendingData : []);
+      setRequirements(Array.isArray(requirementsData) ? requirementsData : []);
+      setFlagged(Array.isArray(flaggedData) ? flaggedData : []);
       setContacts(Array.isArray(contactsData) ? contactsData : []);
     } finally {
       setLoading(false);
@@ -123,7 +135,7 @@ export default function AdminDashboard() {
           >
             {tab.label}
             <span className="ml-1 text-xs text-gray-400">
-              {tab.key === 'offers' ? offers.length : tab.key === 'pending' ? pending.length : contacts.length}
+              {tab.key === 'offers' ? offers.length : tab.key === 'pending' ? pending.length : tab.key === 'requirements' ? requirements.length : tab.key === 'flagged' ? flagged.length : contacts.length}
             </span>
           </button>
         ))}
@@ -252,6 +264,104 @@ export default function AdminDashboard() {
                         >
                           Approve & Publish
                         </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'requirements' && (
+            <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className={thCls}>Buyer</th>
+                    <th className={thCls}>Location</th>
+                    <th className={thCls}>Requirement</th>
+                    <th className={thCls}>Matches</th>
+                    <th className={thCls}>Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {requirements.length === 0 && (
+                    <tr><td colSpan="5" className={tdCls + " text-center text-gray-500"}>No buyer requirements yet.</td></tr>
+                  )}
+                  {requirements.map(r => (
+                    <tr key={r.id}>
+                      <td className={tdCls}>
+                        <div className="font-medium">{r.buyer_name || '—'}</div>
+                        <div className="text-xs text-gray-500">{r.buyer_phone}</div>
+                        <a
+                          href={whatsappLink(r.buyer_phone, `Assalam o Alaikum, about your property requirement`)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={waBtnCls}
+                        >
+                          WhatsApp Buyer
+                        </a>
+                      </td>
+                      <td className={tdCls}>
+                        <div>{r.society_name || 'Any'}</div>
+                        <div className="text-xs text-gray-500">{r.city_name || ''}</div>
+                      </td>
+                      <td className={tdCls}>
+                        <div>{r.property_type || 'Any'}{r.budget_max != null ? ` • PKR ${Number(r.budget_max).toLocaleString()}` : ''}</div>
+                        {r.notes && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{r.notes}</div>}
+                      </td>
+                      <td className={tdCls}>
+                        <span className="font-semibold text-emerald-700">{r.matching_properties ?? 0}</span>
+                        <span className="text-xs text-gray-500"> active</span>
+                      </td>
+                      <td className={tdCls}>{new Date(r.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'flagged' && (
+            <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className={thCls}>Property</th>
+                    <th className={thCls}>Seller</th>
+                    <th className={thCls}>Reports</th>
+                    <th className={thCls}>Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {flagged.length === 0 && (
+                    <tr><td colSpan="4" className={tdCls + " text-center text-gray-500"}>No flagged listings.</td></tr>
+                  )}
+                  {flagged.map(p => (
+                    <tr key={p.id}>
+                      <td className={tdCls}>
+                        <div className="font-medium">{p.title}</div>
+                        <div className="text-xs text-gray-500">Code: {p.property_code}</div>
+                      </td>
+                      <td className={tdCls}>
+                        <div className="font-medium">{p.seller_name || '—'}</div>
+                        <div className="text-xs text-gray-500">{p.seller_phone}</div>
+                        <a
+                          href={whatsappLink(p.seller_phone, `Assalam o Alaikum, regarding your flagged listing ${p.property_code}`)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={waBtnCls}
+                        >
+                          WhatsApp Seller
+                        </a>
+                      </td>
+                      <td className={tdCls}>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
+                          {p.report_count}
+                        </span>
+                      </td>
+                      <td className={tdCls}>
+                        <span className="text-red-600 font-medium">{p.status}</span>
                       </td>
                     </tr>
                   ))}

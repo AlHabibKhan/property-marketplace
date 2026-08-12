@@ -95,6 +95,39 @@ router.post('/', async (req, res) => {
   res.json({ success: true, property: result.rows[0] });
 });
 
+// PUBLIC: report/flag a listing — inserts into listing_reports, auto-flags at 3+
+router.post('/:code/report', async (req, res) => {
+  const { code } = req.params;
+  const { reason, reporter_phone } = req.body;
+
+  const property = await pool.query(
+    `SELECT id, status FROM properties WHERE property_code = $1`, [code]
+  );
+  if (property.rows.length === 0) return res.status(404).json({ error: 'Property not found' });
+
+  await pool.query(
+    `INSERT INTO listing_reports (property_id, reason, reporter_phone) VALUES ($1,$2,$3)`,
+    [property.rows[0].id, reason || null, reporter_phone || null]
+  );
+
+  const countRes = await pool.query(
+    `SELECT COUNT(*) AS count FROM listing_reports WHERE property_id = $1`,
+    [property.rows[0].id]
+  );
+  const reportCount = parseInt(countRes.rows[0].count);
+
+  let flagged = false;
+  if (reportCount >= 3 && property.rows[0].status === 'active') {
+    await pool.query(
+      `UPDATE properties SET status = 'flagged' WHERE id = $1`,
+      [property.rows[0].id]
+    );
+    flagged = true;
+  }
+
+  res.json({ success: true, report_count: reportCount, flagged });
+});
+
 // SELLER: view all own listings by phone (no login system needed for MVP)
 router.get('/my-listings/:phone', async (req, res) => {
   const { normalizePhone } = await import('../utils/upsertContact.js');
