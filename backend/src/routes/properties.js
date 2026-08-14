@@ -39,8 +39,10 @@ router.get('/', async (req, res) => {
   if (society_id) { params.push(society_id); query += ` AND p.society_id = $${params.length}`; }
   if (phase_id) { params.push(phase_id); query += ` AND p.phase_id = $${params.length}`; }
   if (property_type) { params.push(property_type); query += ` AND p.property_type = $${params.length}`; }
-  if (min_price) { params.push(min_price); query += ` AND p.price >= $${params.length}`; }
-  if (max_price) { params.push(max_price); query += ` AND p.price <= $${params.length}`; }
+  const minNum = Number(min_price);
+  if (min_price && !isNaN(minNum)) { params.push(minNum); query += ` AND p.price >= $${params.length}`; }
+  const maxNum = Number(max_price);
+  if (max_price && !isNaN(maxNum)) { params.push(maxNum); query += ` AND p.price <= $${params.length}`; }
   query += ` ORDER BY p.is_featured DESC, p.created_at DESC`;
 
   const result = await pool.query(query, params);
@@ -69,6 +71,13 @@ router.get('/:slug', async (req, res) => {
 router.post('/', async (req, res) => {
   const { seller_name, seller_phone, title, description, property_type, size,
           price, city_id, society_id, phase_id, block_or_street, images } = req.body;
+
+  if (!seller_phone || typeof seller_phone !== 'string') {
+    return res.status(400).json({ error: 'seller_phone is required' });
+  }
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'title is required' });
+  }
 
   const masterContactId = await upsertMasterContact({
     name: seller_name, phone: seller_phone, role: 'seller', city: city_id,

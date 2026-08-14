@@ -8,6 +8,10 @@ router.post('/:propertyCode', async (req, res) => {
   const { buyer_name, buyer_phone, buyer_email, offer_price, message } = req.body;
   const { propertyCode } = req.params;
 
+  if (!buyer_phone || typeof buyer_phone !== 'string') {
+    return res.status(400).json({ error: 'buyer_phone is required' });
+  }
+
   const property = await pool.query(
     `SELECT id, city_id FROM properties WHERE property_code = $1`, [propertyCode]
   );

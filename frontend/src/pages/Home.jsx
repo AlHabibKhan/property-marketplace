@@ -17,10 +17,12 @@ export default function Home() {
   async function loadProperties() {
     setLoading(true);
     const filters = {
-      ...location,
-      property_type: propertyType || undefined,
-      min_price: minPrice || undefined,
-      max_price: maxPrice || undefined
+      ...(location.city_id ? { city_id: location.city_id } : {}),
+      ...(location.society_id ? { society_id: location.society_id } : {}),
+      ...(location.phase_id ? { phase_id: location.phase_id } : {}),
+      ...(propertyType ? { property_type: propertyType } : {}),
+      ...(minPrice ? { min_price: minPrice } : {}),
+      ...(maxPrice ? { max_price: maxPrice } : {})
     };
     const data = await fetchProperties(filters);
     setProperties(data);

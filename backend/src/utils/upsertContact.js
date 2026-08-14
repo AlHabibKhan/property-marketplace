@@ -2,6 +2,7 @@ import pool from '../db/connection.js';
 
 // Normalize Pakistani phone numbers to consistent format
 export function normalizePhone(phone) {
+  if (typeof phone !== 'string' || !phone.trim()) throw new Error('phone is required');
   let p = phone.replace(/[\s-]/g, '');
   if (p.startsWith('0')) p = '92' + p.slice(1);
   if (!p.startsWith('92')) p = '92' + p;
