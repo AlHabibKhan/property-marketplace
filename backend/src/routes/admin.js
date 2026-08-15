@@ -29,11 +29,16 @@ router.patch('/offers/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// Listings needing approval
+// Listings needing approval — include location names so admin can review full details
 router.get('/properties/pending', async (req, res) => {
   const result = await pool.query(
-    `SELECT p.*, s.name AS seller_name, s.phone AS seller_phone
-     FROM properties p JOIN sellers s ON p.seller_id = s.id
+    `SELECT p.*, s.name AS seller_name, s.phone AS seller_phone,
+            c.name AS city_name, so.name AS society_name, ph.phase_name
+     FROM properties p
+     JOIN sellers s ON p.seller_id = s.id
+     LEFT JOIN cities c ON p.city_id = c.id
+     LEFT JOIN societies so ON p.society_id = so.id
+     LEFT JOIN society_phases ph ON p.phase_id = ph.id
      WHERE p.status = 'pending_review' ORDER BY p.created_at DESC`
   );
   res.json(result.rows);

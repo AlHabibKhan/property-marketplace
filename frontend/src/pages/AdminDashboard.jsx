@@ -41,6 +41,7 @@ export default function AdminDashboard() {
   const [requirements, setRequirements] = useState([]);
   const [flagged, setFlagged] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [viewing, setViewing] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -255,15 +256,22 @@ export default function AdminDashboard() {
                         <div className="text-sm font-semibold text-emerald-700">
                           {p.price != null ? `PKR ${Number(p.price).toLocaleString()}` : '—'}
                         </div>
-                        {p.description && <div className="text-xs text-gray-500 mt-1 line-clamp-2">{p.description}</div>}
                       </td>
                       <td className={tdCls}>
-                        <button
-                          onClick={() => handleApprove(p.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                          Approve & Publish
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => setViewing(p)}
+                            className="bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleApprove(p.id)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            Approve & Publish
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -412,6 +420,112 @@ export default function AdminDashboard() {
             </div>
           )}
         </>
+      )}
+
+      {viewing && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" onClick={() => setViewing(null)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">{viewing.title}</h2>
+              <button
+                onClick={() => setViewing(null)}
+                className="text-gray-500 hover:text-gray-800 text-xl leading-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-5">
+              {Array.isArray(viewing.images) && viewing.images.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto">
+                  {viewing.images.map((img, i) => (
+                    <img key={i} src={img} alt="" className="h-40 w-56 object-cover rounded-lg border border-gray-200" />
+                  ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Property Code</div>
+                  <div className="font-mono font-semibold mt-0.5">{viewing.property_code}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Price</div>
+                  <div className="font-semibold text-emerald-700 mt-0.5">
+                    {viewing.price != null ? `PKR ${Number(viewing.price).toLocaleString()}` : '—'}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Type</div>
+                  <div className="font-semibold mt-0.5">{viewing.property_type || '—'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Size</div>
+                  <div className="font-semibold mt-0.5">{viewing.size || '—'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Location</div>
+                  <div className="font-semibold mt-0.5">
+                    {[viewing.city_name, viewing.society_name, viewing.phase_name].filter(Boolean).join(', ') || '—'}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Block / Street</div>
+                  <div className="font-semibold mt-0.5">{viewing.block_or_street || '—'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Submitted</div>
+                  <div className="font-semibold mt-0.5">{viewing.created_at ? new Date(viewing.created_at).toLocaleString() : '—'}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 uppercase font-medium">Featured</div>
+                  <div className="font-semibold mt-0.5">{viewing.is_featured ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
+
+              {viewing.description && (
+                <div>
+                  <div className="text-xs text-gray-500 uppercase font-medium mb-1">Description</div>
+                  <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{viewing.description}</p>
+                </div>
+              )}
+
+              <div className="border-t border-gray-200 pt-4">
+                <div className="text-xs text-gray-500 uppercase font-medium mb-2">Seller</div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="font-semibold text-gray-900">{viewing.seller_name || '—'}</div>
+                    <div className="text-sm text-gray-500">{viewing.seller_phone}</div>
+                  </div>
+                  <a
+                    href={whatsappLink(viewing.seller_phone, `Assalam o Alaikum, regarding your listing ${viewing.property_code}`)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-1.5 hover:bg-emerald-100 transition-colors"
+                  >
+                    WhatsApp Seller
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={() => setViewing(null)}
+                className="text-sm font-medium text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:text-gray-900 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => { handleApprove(viewing.id); setViewing(null); }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                Approve & Publish
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
