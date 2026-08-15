@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import LocationSelector from '../components/LocationSelector';
 import PropertyCard from '../components/PropertyCard';
 import LoginPanel from '../components/LoginPanel';
+import RoleHero from '../components/RoleHero';
 import SellerDashboard from '../components/SellerDashboard';
 import BuyerDashboard from '../components/BuyerDashboard';
 import { useAuth } from '../context/AuthContext';
@@ -37,18 +38,8 @@ export default function Home() {
   const selectCls = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1";
 
-  return (
-    <div className="space-y-6">
-      <LoginPanel />
-
-      {user?.role === 'seller' && <SellerDashboard />}
-      {user?.role === 'buyer' && <BuyerDashboard />}
-
-      <section className="bg-emerald-700 text-white rounded-xl p-6 md:p-10">
-        <h1 className="text-2xl md:text-3xl font-bold">Find Your Next Property</h1>
-        <p className="mt-2 text-emerald-100">Browse verified plots, houses, and apartments across Pakistan.</p>
-      </section>
-
+  const browseSection = (
+    <>
       <section className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-2">
@@ -87,6 +78,61 @@ export default function Home() {
           </div>
         )}
       </section>
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+      <LoginPanel />
+
+      {!user && (
+        <>
+          <section className="bg-emerald-700 text-white rounded-xl p-6 md:p-10">
+            <h1 className="text-2xl md:text-3xl font-bold">Buy or Sell Your Next Property</h1>
+            <p className="mt-2 text-emerald-100">Browse verified plots, houses, and apartments across Pakistan — or list your own.</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link to="/list" className="bg-white text-emerald-700 font-semibold px-5 py-2.5 rounded-lg hover:bg-emerald-50 transition-colors">List Your Property</Link>
+              <Link to="/requirements" className="text-emerald-100 border border-white/60 hover:bg-white/10 font-medium px-5 py-2.5 rounded-lg transition-colors">Post a Requirement</Link>
+            </div>
+          </section>
+        </>
+      )}
+
+      {user?.role === 'seller' && (
+        <>
+          <RoleHero
+            role="seller"
+            name={user.name}
+            eyebrow="Seller Portal"
+            title="Welcome back, {name}"
+            subtitle="Manage your listings, track buyer offers, and reach more buyers across Pakistan."
+            ctaLabel="+ List New Property"
+            ctaTo="/list"
+            ctaSecondary="Explore the market"
+          />
+          <SellerDashboard />
+          <h2 className="text-xl font-semibold text-gray-900 pt-2">Explore the Market</h2>
+          {browseSection}
+        </>
+      )}
+
+      {user?.role === 'buyer' && (
+        <>
+          <RoleHero
+            role="buyer"
+            name={user.name}
+            eyebrow="Buyer Portal"
+            title="Welcome back, {name}"
+            subtitle="Check your requirements and offers — or keep browsing verified listings."
+            ctaLabel="+ Post New Requirement"
+            ctaTo="/requirements"
+            ctaSecondary="Browse available properties"
+          />
+          <BuyerDashboard />
+          <h2 className="text-xl font-semibold text-gray-900 pt-2">Browse Properties</h2>
+          {browseSection}
+        </>
+      )}
 
       <section className="bg-amber-50 border border-amber-200 rounded-xl p-5">
         <h2 className="font-semibold text-amber-900">Important Notice</h2>
