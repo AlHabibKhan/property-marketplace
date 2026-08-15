@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import LocationSelector from '../components/LocationSelector';
+import PropertyTypeSelector from '../components/PropertyTypeSelector';
 import { useAuth } from '../context/AuthContext';
 import { createListing, polishDescription } from '../api/client';
 
@@ -119,12 +120,7 @@ export default function ListProperty() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className={labelCls}>Property Type</label>
-            <select name="property_type" value={form.property_type} onChange={handleChange} className={inputCls}>
-              <option>House</option>
-              <option>Flat</option>
-              <option>Plot</option>
-              <option>Commercial</option>
-            </select>
+            <PropertyTypeSelector value={form.property_type} onChange={v => setForm({ ...form, property_type: v })} />
           </div>
           <div>
             <label className={labelCls}>Size</label>
