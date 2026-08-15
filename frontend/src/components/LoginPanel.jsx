@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchIdentity } from '../api/client';
 
@@ -9,6 +10,7 @@ const ROLES = {
 
 export default function LoginPanel() {
   const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
   const [role, setRole] = useState(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -108,6 +110,16 @@ export default function LoginPanel() {
               <p className="text-sm text-gray-600 mt-1">{r.desc}</p>
             </button>
           ))}
+          <button
+            onClick={() => navigate('/admin')}
+            className="text-left bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 rounded-lg p-4 transition-colors sm:col-span-2"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-gray-900">Admin</span>
+              <span className="text-emerald-600 text-xs">⚙</span>
+            </div>
+            <p className="text-sm text-gray-600 mt-1">Review listings, offers & requirements</p>
+          </button>
         </div>
         <p className="text-xs text-gray-400 mt-3">
           One phone number = one role. No password needed — we identify you by phone number.
