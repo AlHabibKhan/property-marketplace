@@ -41,7 +41,6 @@ function Navbar() {
           ) : (
             <Link to="/" className="text-emerald-600 font-semibold hover:text-emerald-700">Login</Link>
           )}
-          <Link to="/admin" className="text-gray-700 hover:text-emerald-700">Admin</Link>
         </div>
       </div>
     </nav>
