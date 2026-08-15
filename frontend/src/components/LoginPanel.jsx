@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { fetchIdentity } from '../api/client';
 
 const ROLES = {
   seller: { label: 'Seller', desc: 'List your property and track offers', icon: '▼' },
@@ -12,26 +13,52 @@ export default function LoginPanel() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [conflict, setConflict] = useState(null);
 
   const selectRole = r => {
     setRole(r);
     setError('');
+    setConflict(null);
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    if (!name.trim() && !phone.trim()) {
-      setError('Please enter your name and phone number.');
-      return;
-    }
+    setError('');
+    setConflict(null);
+
     if (!phone.trim()) {
       setError('Phone number is required.');
       return;
     }
+
+    setChecking(true);
+    let identity = null;
+    try {
+      identity = await fetchIdentity(phone.trim());
+    } catch {
+      identity = null;
+    }
+    setChecking(false);
+
+    const knownRole = identity?.seller ? 'seller' : identity?.buyer ? 'buyer' : null;
+    if (knownRole && knownRole !== role) {
+      setConflict(knownRole);
+      return;
+    }
+
     login(role, name.trim(), phone.trim());
     setName('');
     setPhone('');
     setRole(null);
+  };
+
+  const loginAsConflictRole = () => {
+    login(conflict, name.trim(), phone.trim());
+    setName('');
+    setPhone('');
+    setRole(null);
+    setConflict(null);
   };
 
   if (user) {
@@ -66,7 +93,7 @@ export default function LoginPanel() {
   if (!role) {
     return (
       <section className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">Continue as</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Register as</h2>
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Object.entries(ROLES).map(([key, r]) => (
             <button
@@ -83,8 +110,35 @@ export default function LoginPanel() {
           ))}
         </div>
         <p className="text-xs text-gray-400 mt-3">
-          No password needed — we identify you by phone number. Your details stay on this device.
+          One phone number = one role. No password needed — we identify you by phone number.
         </p>
+      </section>
+    );
+  }
+
+  if (conflict) {
+    const existing = ROLES[conflict];
+    return (
+      <section className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
+        <h2 className="text-lg font-semibold text-amber-900">Phone already registered</h2>
+        <p className="text-sm text-amber-800 mt-1">
+          This phone number ({phone.trim()}) is already registered as a <strong>{existing.label}</strong>.
+          One phone number can only have one role.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            onClick={loginAsConflictRole}
+            className={`${conflict === 'seller' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'} text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors`}
+          >
+            Continue as {existing.label}
+          </button>
+          <button
+            onClick={() => { setConflict(null); setRole(null); }}
+            className="text-sm font-medium text-gray-600 border border-gray-300 bg-white px-4 py-2 rounded-lg hover:text-gray-800 transition-colors"
+          >
+            Back
+          </button>
+        </div>
       </section>
     );
   }
@@ -93,7 +147,7 @@ export default function LoginPanel() {
   return (
     <section className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Continue as {r.label}</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Register as {r.label}</h2>
         <button onClick={() => setRole(null)} className="text-sm text-gray-500 hover:text-gray-700">Back</button>
       </div>
       <p className="text-sm text-gray-600 mt-1">Enter your details to get started.</p>
@@ -113,9 +167,10 @@ export default function LoginPanel() {
         />
         <button
           type="submit"
-          className={`${role === 'seller' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'} text-white font-semibold px-4 py-2 rounded-lg transition-colors`}
+          disabled={checking}
+          className={`${role === 'seller' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'} disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-lg transition-colors`}
         >
-          {r.label === 'Seller' ? 'Start Selling' : 'Start Buying'}
+          {checking ? 'Checking...' : r.label === 'Seller' ? 'Start Selling' : 'Start Buying'}
         </button>
       </form>
       {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
