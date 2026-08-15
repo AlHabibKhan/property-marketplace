@@ -4,6 +4,7 @@ import { generatePropertyCode } from '../utils/generateCode.js';
 import { generateSlug } from '../utils/generateSlug.js';
 import { upsertMasterContact, upsertSeller } from '../utils/upsertContact.js';
 import { polishDescription } from '../utils/polishDescription.js';
+import { resolveLocation } from '../utils/resolveLocation.js';
 const router = express.Router();
 
 // PUBLIC: polish raw description text with Gemini before final submit
@@ -70,7 +71,8 @@ router.get('/:slug', async (req, res) => {
 // SELLER: create new listing
 router.post('/', async (req, res) => {
   const { seller_name, seller_phone, title, description, property_type, size,
-          price, city_id, society_id, phase_id, block_or_street, images } = req.body;
+          price, city_id, society_id, phase_id, block_or_street, images,
+          city_name, society_name, phase_name } = req.body;
 
   if (!seller_phone || typeof seller_phone !== 'string') {
     return res.status(400).json({ error: 'seller_phone is required' });
@@ -79,8 +81,19 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'title is required' });
   }
 
+  let resolved;
+  try {
+    resolved = await resolveLocation({ city_id, city_name, society_id, society_name, phase_id, phase_name });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  if (!resolved.city_id) {
+    return res.status(400).json({ error: 'city_id or city_name is required' });
+  }
+  const { city_id: resCityId, society_id: resSocietyId, phase_id: resPhaseId } = resolved;
+
   const masterContactId = await upsertMasterContact({
-    name: seller_name, phone: seller_phone, role: 'seller', city: city_id,
+    name: seller_name, phone: seller_phone, role: 'seller', city: resCityId,
     tags: ['seller', property_type].filter(Boolean)
   });
 
@@ -91,14 +104,14 @@ router.post('/', async (req, res) => {
   });
 
   const propertyCode = await generatePropertyCode();
-  const slug = generateSlug(title, city_id, society_id, propertyCode);
+  const slug = generateSlug(title, resCityId, resSocietyId, propertyCode);
 
   const result = await pool.query(
     `INSERT INTO properties (property_code, slug, seller_id, title, description,
        property_type, size, price, city_id, society_id, phase_id, block_or_street, images)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING property_code, slug`,
     [propertyCode, slug, sellerId, title, description, property_type,
-     size, price, city_id, society_id, phase_id, block_or_street, images]
+     size, price, resCityId, resSocietyId, resPhaseId, block_or_street, images]
   );
 
   res.json({ success: true, property: result.rows[0] });

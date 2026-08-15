@@ -3,7 +3,7 @@ import LocationSelector from '../components/LocationSelector';
 import { createListing, polishDescription } from '../api/client';
 
 export default function ListProperty() {
-  const [location, setLocation] = useState({ city_id: '', society_id: '', phase_id: '' });
+  const [location, setLocation] = useState({ city_id: '', city_name: '', society_id: '', society_name: '', phase_id: '', phase_name: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,8 @@ export default function ListProperty() {
     setError('');
     setSuccess('');
 
-    if (!location.city_id) {
-      setError('Please select a city.');
+    if (!location.city_id && !location.city_name) {
+      setError('Please select a city or type your own.');
       return;
     }
     if (!form.title || !form.seller_phone) {
@@ -57,9 +57,12 @@ export default function ListProperty() {
     const res = await createListing({
       ...form,
       price: form.price ? Number(form.price) : null,
-      city_id: location.city_id,
+      city_id: location.city_id || null,
+      city_name: location.city_name || null,
       society_id: location.society_id || null,
-      phase_id: location.phase_id || null
+      society_name: location.society_name || null,
+      phase_id: location.phase_id || null,
+      phase_name: location.phase_name || null
     });
 
     setLoading(false);
@@ -76,7 +79,7 @@ export default function ListProperty() {
         block_or_street: '',
         images: []
       });
-      setLocation({ city_id: '', society_id: '', phase_id: '' });
+      setLocation({ city_id: '', city_name: '', society_id: '', society_name: '', phase_id: '', phase_name: '' });
     } else {
       setError(res.error || 'Failed to submit listing. Please try again.');
     }

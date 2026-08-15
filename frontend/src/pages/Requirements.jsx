@@ -7,8 +7,11 @@ export default function Requirements() {
   const [searchParams] = useSearchParams();
   const [location, setLocation] = useState({
     city_id: searchParams.get('city_id') || '',
+    city_name: '',
     society_id: searchParams.get('society_id') || '',
-    phase_id: ''
+    society_name: '',
+    phase_id: '',
+    phase_name: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -43,14 +46,16 @@ export default function Requirements() {
       ...form,
       budget_max: form.budget_max ? Number(form.budget_max) : null,
       city_id: location.city_id || null,
-      society_id: location.society_id || null
+      city_name: location.city_name || null,
+      society_id: location.society_id || null,
+      society_name: location.society_name || null
     });
     setLoading(false);
 
     if (res.success) {
       setSuccess('Requirement posted! Our team will match it against available listings.');
       setForm({ buyer_name: '', buyer_phone: '', buyer_email: '', budget_max: '', property_type: '', notes: '' });
-      setLocation({ city_id: '', society_id: '', phase_id: '' });
+      setLocation({ city_id: '', city_name: '', society_id: '', society_name: '', phase_id: '', phase_name: '' });
     } else {
       setError(res.error || 'Failed to post requirement.');
     }
