@@ -9,22 +9,51 @@ import AdminDashboard from './pages/AdminDashboard';
 import LegalPage from './pages/LegalPage';
 import { legalContent } from './pages/legal-content';
 import Footer from './components/Footer';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+function Navbar() {
+  const { user, logout } = useAuth();
+  const roleLabel = user?.role === 'seller' ? 'Seller' : user?.role === 'buyer' ? 'Buyer' : null;
+
+  return (
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+        <Link to="/" className="text-xl font-bold text-emerald-700">Property Marketplace</Link>
+        <div className="flex items-center gap-4 text-sm font-medium">
+          <Link to="/" className="text-gray-700 hover:text-emerald-700">Browse</Link>
+          <Link to="/list" className="text-gray-700 hover:text-emerald-700">List Property</Link>
+          <Link to="/requirements" className="text-gray-700 hover:text-emerald-700">Post Requirement</Link>
+          {user ? (
+            <>
+              <span className="hidden sm:inline-flex items-center gap-2 text-gray-700">
+                Hi, <span className="text-emerald-700">{user.name || 'Guest'}</span>
+                <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${user.role === 'seller' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-100 text-teal-800'}`}>
+                  {roleLabel}
+                </span>
+              </span>
+              <button
+                onClick={logout}
+                className="text-gray-500 hover:text-red-600 transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/" className="text-emerald-600 font-semibold hover:text-emerald-700">Login</Link>
+          )}
+          <Link to="/admin" className="text-gray-700 hover:text-emerald-700">Admin</Link>
+        </div>
+      </div>
+    </nav>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link to="/" className="text-xl font-bold text-emerald-700">Property Marketplace</Link>
-            <div className="flex items-center gap-4 text-sm font-medium">
-              <Link to="/" className="text-gray-700 hover:text-emerald-700">Browse</Link>
-              <Link to="/list" className="text-gray-700 hover:text-emerald-700">List Property</Link>
-              <Link to="/requirements" className="text-gray-700 hover:text-emerald-700">Post Requirement</Link>
-              <Link to="/admin" className="text-gray-700 hover:text-emerald-700">Admin</Link>
-            </div>
-          </div>
-        </nav>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Navbar />
 
         <main className="max-w-6xl mx-auto px-4 py-8">
           <Routes>
@@ -41,8 +70,9 @@ export default function App() {
           </Routes>
         </main>
 
-        <Footer />
-      </div>
+          <Footer />
+        </div>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

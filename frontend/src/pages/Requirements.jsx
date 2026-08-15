@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import LocationSelector from '../components/LocationSelector';
+import { useAuth } from '../context/AuthContext';
 import { submitRequirement } from '../api/client';
 
 export default function Requirements() {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [location, setLocation] = useState({
     city_id: searchParams.get('city_id') || '',
@@ -18,8 +20,8 @@ export default function Requirements() {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    buyer_name: '',
-    buyer_phone: '',
+    buyer_name: user?.role === 'buyer' ? user.name : '',
+    buyer_phone: user?.role === 'buyer' ? user.phone : '',
     buyer_email: '',
     budget_max: '',
     property_type: '',

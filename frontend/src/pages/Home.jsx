@@ -2,9 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LocationSelector from '../components/LocationSelector';
 import PropertyCard from '../components/PropertyCard';
+import LoginPanel from '../components/LoginPanel';
+import SellerDashboard from '../components/SellerDashboard';
+import BuyerDashboard from '../components/BuyerDashboard';
+import { useAuth } from '../context/AuthContext';
 import { fetchProperties } from '../api/client';
 
 export default function Home() {
+  const { user } = useAuth();
   const [location, setLocation] = useState({ city_id: '', society_id: '', phase_id: '' });
   const [propertyType, setPropertyType] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -34,6 +39,11 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
+      <LoginPanel />
+
+      {user?.role === 'seller' && <SellerDashboard />}
+      {user?.role === 'buyer' && <BuyerDashboard />}
+
       <section className="bg-emerald-700 text-white rounded-xl p-6 md:p-10">
         <h1 className="text-2xl md:text-3xl font-bold">Find Your Next Property</h1>
         <p className="mt-2 text-emerald-100">Browse verified plots, houses, and apartments across Pakistan.</p>

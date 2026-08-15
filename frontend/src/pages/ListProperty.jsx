@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import LocationSelector from '../components/LocationSelector';
+import { useAuth } from '../context/AuthContext';
 import { createListing, polishDescription } from '../api/client';
 
 export default function ListProperty() {
+  const { user } = useAuth();
   const [location, setLocation] = useState({ city_id: '', city_name: '', society_id: '', society_name: '', phase_id: '', phase_name: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -10,8 +12,8 @@ export default function ListProperty() {
   const [polishing, setPolishing] = useState(false);
 
   const [form, setForm] = useState({
-    seller_name: '',
-    seller_phone: '',
+    seller_name: user?.role === 'seller' ? user.name : '',
+    seller_phone: user?.role === 'seller' ? user.phone : '',
     title: '',
     description: '',
     property_type: 'House',

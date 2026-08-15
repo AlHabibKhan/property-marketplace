@@ -66,6 +66,23 @@ export async function polishDescription(text) {
   return res.json();
 }
 
+export async function fetchMyListings(phone) {
+  const res = await fetch(`${API_URL}/properties/my-listings/${encodeURIComponent(phone)}`);
+  return res.json();
+}
+export async function fetchMyRequirements(phone) {
+  const res = await fetch(`${API_URL}/requirements/my/${encodeURIComponent(phone)}`);
+  return res.json();
+}
+export async function fetchMyOffers(phone) {
+  const res = await fetch(`${API_URL}/offers/my/${encodeURIComponent(phone)}`);
+  return res.json();
+}
+export async function fetchReceivedOffers(phone) {
+  const res = await fetch(`${API_URL}/offers/received/${encodeURIComponent(phone)}`);
+  return res.json();
+}
+
 function adminHeaders() {
   return {
     'Content-Type': 'application/json',

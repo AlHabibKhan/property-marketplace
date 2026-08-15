@@ -37,4 +37,24 @@ router.post('/', async (req, res) => {
   res.json({ success: true, requirement_id: result.rows[0].id });
 });
 
+// BUYER: view own requirements by phone
+router.get('/my/:phone', async (req, res) => {
+  const { normalizePhone } = await import('../utils/upsertContact.js');
+  const phone = normalizePhone(req.params.phone);
+
+  const result = await pool.query(`
+    SELECT r.id, r.budget_max, r.property_type, r.notes, r.status, r.created_at,
+           c.name AS city_name, s.name AS society_name,
+           (SELECT COUNT(*) FROM properties p WHERE p.status = 'active' AND p.society_id = r.society_id) AS matching_properties
+    FROM buyer_requirements r
+    JOIN buyers b ON r.buyer_id = b.id
+    LEFT JOIN cities c ON r.city_id = c.id
+    LEFT JOIN societies s ON r.society_id = s.id
+    WHERE b.phone = $1
+    ORDER BY r.created_at DESC
+  `, [phone]);
+
+  res.json(result.rows);
+});
+
 export default router;
